@@ -7,9 +7,9 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class SubscriptionData {
+public class Customer {
 
-	private Long subtypeNumber;
-	private String pricingRoutine;
-	private String frequency;
+	public String contact;
+	public String email;
+	public String name;
 }
