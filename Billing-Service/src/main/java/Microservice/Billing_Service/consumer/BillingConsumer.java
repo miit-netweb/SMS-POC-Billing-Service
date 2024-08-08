@@ -5,6 +5,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
@@ -35,6 +37,8 @@ public class BillingConsumer {
     
    private String subscriptionBillingDtoStr;
 
+    private final Logger LOGGER = LoggerFactory.getLogger(BillingConsumer.class);
+
     @KafkaListener(topics = "billing", groupId = "billingGroup")
     public void consume(String subscriptionBillingDtoStr) {
         ObjectMapper objectMapper = new ObjectMapper();
@@ -45,6 +49,8 @@ public class BillingConsumer {
         try {
             BillingPending billingPending = objectMapper.readValue(subscriptionBillingDtoStr, BillingPending.class);
             //System.out.println(billingPending.getId());
+
+            LOGGER.info("Kafka consumer consumed the billing message for subsriber {}",billingPending.getSubscriberNumber());
 
             // RazorPay RequestBody Preparation
             Optional<Subscriber> optionalResponse = subscriberRepo.findSubscriberBySubscriberNumber(billingPending.getSubscriberNumber());
@@ -65,14 +71,17 @@ public class BillingConsumer {
                 requestBody.put("callback_url", "http://localhost:8600/callback");
                 requestBody.put("callback_method", "get");
 
+                LOGGER.info("customer has been created and all the required parameter is set for payment");
+
                 // Create payment link
                 try {
                     String paymentLink = razorpayService.createPaymentLink(requestBody);
                     PaymentLinkResponse response = objectMapper.readValue(paymentLink, PaymentLinkResponse.class);
-                    System.out.println("Callback URL: " + response.getCallbackUrl());
-                    System.out.println("Short URL: " + response.getShortUrl());
+                    LOGGER.info("Payment link has been generated successfully : {}", response.getShortUrl());
+                    LOGGER.info("Once payment is done, Callback URL will be called : {}",response.getCallbackUrl());
+
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    LOGGER.error("Payment link could not be generated. error ; {}",e.getMessage());
                 }
 
 //                billingService.removePendingEntry(billingPending);
@@ -99,8 +108,8 @@ public class BillingConsumer {
         try {
         BillingPending billingPending = objectMapper.readValue(subscriptionBillingDtoStr, BillingPending.class);
         System.out.println(billingPending.getId());
-        
         billingService.removePendingEntry(billingPending);
+        LOGGER.info("Removed enrty from billing-pending-table for Subscriber : {}",billingPending.getSubscriberNumber());
         billingPending.setStatus("BILLING_SUCCESS");
         billingService.addSuccessEntry(new BillingSuccess(
                 billingPending.getSubscriberNumber(),
@@ -109,8 +118,9 @@ public class BillingConsumer {
                 billingPending.getPricingRoutine(),
                 "BILLING_SUCCESS"
         ));
+        LOGGER.info("Inserted enrty from billing-success-table for Subscriber : {}",billingPending.getSubscriberNumber());
         }catch(Exception e) {
-        	e.printStackTrace();
+            LOGGER.error("Error while Updating the status of billing from PENDING TO SUCCESS, {}",e.getMessage());
         }
 		return "Inserted Successfully";
     }

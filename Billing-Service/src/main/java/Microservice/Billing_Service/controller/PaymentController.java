@@ -1,5 +1,7 @@
 package Microservice.Billing_Service.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -14,6 +16,7 @@ public class PaymentController {
 
 	@Autowired
 	private BillingConsumer consumer;
+    private final Logger LOGGER = LoggerFactory.getLogger(PaymentController.class);
 
     @GetMapping("/callback")
     public String callback(
@@ -24,16 +27,18 @@ public class PaymentController {
             @RequestParam("razorpay_signature") String signature) {
         
         // Log the received parameters (for debugging purposes)
-        log.info("Payment ID: " + paymentId);
-        log.info("Payment Link ID: " + paymentLinkId);
-        log.info("Payment Link Reference ID: " + paymentLinkReferenceId);
-        log.info("Payment Link Status: " + paymentLinkStatus);
-        log.info("Signature: " + signature);
+        LOGGER.info("Payment ID: {}" +
+                "Payment Link ID : {}" +
+                "Payment Link Reference ID : {}" +
+                "Payment Link Status : {}" +
+                "Signature : {}",
+                paymentId, paymentLinkId, paymentLinkReferenceId, paymentLinkStatus, signature);
 
        try {
+           LOGGER.info("Payment has been successfully done.");
     	   consumer.insertSuccess();
        }catch(Exception e) {
-    	   e.printStackTrace();
+    	   LOGGER.error("Issue occurred while updating the entries in the database table : {}",e.getMessage());
        }
         
         // Call the service method to handle the business logic and save to DB
