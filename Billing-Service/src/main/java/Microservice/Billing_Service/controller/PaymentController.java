@@ -25,7 +25,7 @@ public class PaymentController {
             @RequestParam("razorpay_payment_link_reference_id") String paymentLinkReferenceId,
             @RequestParam("razorpay_payment_link_status") String paymentLinkStatus,
             @RequestParam("razorpay_signature") String signature) {
-        
+
         // Log the received parameters (for debugging purposes)
         LOGGER.info("Payment ID: {}" +
                 "Payment Link ID : {}" +
@@ -40,7 +40,7 @@ public class PaymentController {
        }catch(Exception e) {
     	   LOGGER.error("Issue occurred while updating the entries in the database table : {}",e.getMessage());
        }
-        
+
         // Call the service method to handle the business logic and save to DB
        // paymentService.handlePaymentCallback(paymentId, paymentLinkId, paymentLinkReferenceId, paymentLinkStatus, signature);
 

@@ -1,10 +1,10 @@
 package Microservice.Billing_Service.consumer;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.time.LocalDate;
+import java.util.*;
 
+import Microservice.Billing_Service.dto.BillingStatus;
+import Microservice.Billing_Service.producer.BillingStatusProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +34,9 @@ public class BillingConsumer {
 
     @Autowired
     private SubscriberRepository subscriberRepo;
+
+    @Autowired
+    private BillingStatusProducer billingStatusProducer;
     
    private String subscriptionBillingDtoStr;
 
@@ -75,10 +78,21 @@ public class BillingConsumer {
 
                 // Create payment link
                 try {
-                    String paymentLink = razorpayService.createPaymentLink(requestBody);
-                    PaymentLinkResponse response = objectMapper.readValue(paymentLink, PaymentLinkResponse.class);
-                    LOGGER.info("Payment link has been generated successfully : {}", response.getShortUrl());
-                    LOGGER.info("Once payment is done, Callback URL will be called : {}",response.getCallbackUrl());
+//                    String paymentLink = razorpayService.createPaymentLink(requestBody);
+//                    PaymentLinkResponse response = objectMapper.readValue(paymentLink, PaymentLinkResponse.class);
+//                    LOGGER.info("Payment link has been generated successfully : {}", response.getShortUrl());
+//                    LOGGER.info("Once payment is done, Callback URL will be called : {}",response.getCallbackUrl());
+                    Random random = new Random();
+                    int min = 1;
+                    int max = 10;
+
+                    int randomNumber = random.nextInt(max - min + 1) + min;
+                    if(randomNumber<=5){
+                        billingStatusProducer.sendMessage(new BillingStatus(LocalDate.now().toString(),"BILLING-FAILURE"));
+                    }
+                    else {
+                        billingStatusProducer.sendMessage(new BillingStatus(LocalDate.now().toString(),"BILLING-SUCCESS"));
+                    }
 
                 } catch (Exception e) {
                     LOGGER.error("Payment link could not be generated. error ; {}",e.getMessage());
