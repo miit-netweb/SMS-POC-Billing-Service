@@ -1,6 +1,7 @@
 package Microservice.Billing_Service.consumer;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import Microservice.Billing_Service.dto.BillingStatus;
@@ -88,10 +89,10 @@ public class BillingConsumer {
 
                     int randomNumber = random.nextInt(max - min + 1) + min;
                     if(randomNumber<=5){
-                        billingStatusProducer.sendMessage(new BillingStatus(LocalDate.now().toString(),"BILLING-FAILURE"));
+                        billingStatusProducer.sendMessage(new BillingStatus(LocalDateTime.now().toString(),"BILLING-FAILURE"));
                     }
                     else {
-                        billingStatusProducer.sendMessage(new BillingStatus(LocalDate.now().toString(),"BILLING-SUCCESS"));
+                        billingStatusProducer.sendMessage(new BillingStatus(LocalDateTime.now().toString(),"BILLING-SUCCESS"));
                     }
 
                 } catch (Exception e) {
